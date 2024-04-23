@@ -1,0 +1,17 @@
+server:
+  host: localhost
+  port: 3000
+header:
+  referer:
+    - 'http://localhost:3000'
+    - 'http://127.0.0.1:3000'
+  cors:
+    - 'http://localhost:3000'
+    - 'http://127.0.0.1:3000'
+database:
+  host: localhost
+  port: 3306
+  username: root
+  password: P@ssword1234
+  dbname: voice2024-dev
+
