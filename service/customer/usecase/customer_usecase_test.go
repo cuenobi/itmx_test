@@ -3,6 +3,7 @@ package usecase
 import (
 	"testing"
 
+	"itmx_test/domain"
 	"itmx_test/service/entity"
 
 	"github.com/stretchr/testify/assert"
@@ -11,7 +12,7 @@ import (
 type mockCustomerRepo struct {
 	CreateFunc     func(customer *entity.Customer) error
 	FindByIDFunc   func(id string) (*entity.Customer, error)
-	UpdateFunc    func(customer *entity.Customer) error
+	UpdateFunc     func(customer *entity.Customer) error
 	DeleteByIDFunc func(id string) error
 }
 
@@ -49,19 +50,112 @@ func TestCreateCustomer(t *testing.T) {
 			CreateFunc: func(customer *entity.Customer) error {
 				return nil
 			},
+		}
+		usecase := NewCustomerUsecase(repo)
+
+		err := usecase.CreateCustomer(&entity.Customer{Name: "test", Age: 11})
+		assert.NoError(t, err)
+	})
+}
+
+func TestGetCustomerByID(t *testing.T) {
+	t.Run("success", func(t *testing.T) {
+		expectedCustomer := &entity.Customer{Name: "test", Age: 11}
+		repo := &mockCustomerRepo{
+			FindByIDFunc: func(id string) (*entity.Customer, error) {
+				return expectedCustomer, nil
+			},
+		}
+		usecase := NewCustomerUsecase(repo)
+
+		customer, err := usecase.GetCustomerByID("123")
+		assert.NoError(t, err)
+		assert.Equal(t, expectedCustomer, customer)
+	})
+
+	t.Run("error", func(t *testing.T) {
+		expectedErr := domain.ErrNotFound
+		repo := &mockCustomerRepo{
+			FindByIDFunc: func(id string) (*entity.Customer, error) {
+				return nil, expectedErr
+			},
+		}
+		usecase := NewCustomerUsecase(repo)
+
+		customer, err := usecase.GetCustomerByID("123")
+		assert.Error(t, err)
+		assert.Nil(t, customer)
+		assert.Equal(t, expectedErr, err)
+	})
+}
+
+func TestUpdateCustomerByID(t *testing.T) {
+	t.Run("success", func(t *testing.T) {
+		expectedCustomer := &entity.Customer{Name: "updated", Age: 30}
+		repo := &mockCustomerRepo{
 			FindByIDFunc: func(id string) (*entity.Customer, error) {
 				return &entity.Customer{Name: "test", Age: 11}, nil
 			},
 			UpdateFunc: func(customer *entity.Customer) error {
+				assert.Equal(t, expectedCustomer.Name, customer.Name)
+				assert.Equal(t, expectedCustomer.Age, customer.Age)
 				return nil
+			},
+		}
+		usecase := NewCustomerUsecase(repo)
+
+		err := usecase.UpdateCustomerByID(expectedCustomer, "123")
+		assert.NoError(t, err)
+	})
+
+	t.Run("error", func(t *testing.T) {
+		expectedErr := domain.ErrNotFound
+		updateCustomer := &entity.Customer{Name: "updated", Age: 30}
+		repo := &mockCustomerRepo{
+			FindByIDFunc: func(id string) (*entity.Customer, error) {
+				return nil, expectedErr
+			},
+			UpdateFunc: func(customer *entity.Customer) error {
+				return nil
+			},
+		}
+		usecase := NewCustomerUsecase(repo)
+
+		err := usecase.UpdateCustomerByID(updateCustomer, "123")
+		assert.Equal(t, expectedErr, err)
+	})
+}
+
+func TestDelCustomerByID(t *testing.T) {
+	t.Run("success", func(t *testing.T) {
+		expectedCustomer := &entity.Customer{Name: "test", Age: 11}
+		repo := &mockCustomerRepo{
+			FindByIDFunc: func(id string) (*entity.Customer, error) {
+				return expectedCustomer, nil
 			},
 			DeleteByIDFunc: func(id string) error {
 				return nil
 			},
 		}
-		service := NewCustomerUsecase(repo)
+		usecase := NewCustomerUsecase(repo)
 
-		err := service.CreateCustomer(&entity.Customer{Name: "test", Age: 11})
+		err := usecase.DelCustomerByID("123")
 		assert.NoError(t, err)
+	})
+
+	t.Run("error", func(t *testing.T) {
+		expectedErr := domain.ErrNotFound
+		repo := &mockCustomerRepo{
+			FindByIDFunc: func(id string) (*entity.Customer, error) {
+				return nil, domain.ErrNotFound
+			},
+			DeleteByIDFunc: func(id string) error {
+				return nil
+			},
+		}
+		usecase := NewCustomerUsecase(repo)
+
+		err := usecase.DelCustomerByID("123")
+		assert.Equal(t, expectedErr, err)
 	})
 }
