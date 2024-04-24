@@ -37,6 +37,7 @@ require (
 )
 
 require (
+	github.com/DATA-DOG/go-sqlmock v1.5.2
 	github.com/fsnotify/fsnotify v1.7.0 // indirect
 	github.com/glebarez/sqlite v1.11.0
 	github.com/go-playground/validator v9.31.0+incompatible
